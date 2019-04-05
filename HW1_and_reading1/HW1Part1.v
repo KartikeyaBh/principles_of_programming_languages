@@ -252,9 +252,44 @@ Compute mult (S (S O)) (S (S (S O))).   (* should be S (S (S (S (S (S O))))), ak
  * facts about `add`.  Try to keep these simple, based on facts you know from math, and
  * prove them by induction.
  *)
+
+Lemma mult_O :
+  forall n,
+    mult n O = O.
+Proof.
+  induction n.
+  -auto.
+  - simpl. rewrite IHn. reflexivity.
+Qed.
+
+Lemma mult_Ss :
+  forall n1 n2,
+    add n2 (mult n1 n2) = mult (S n1) n2.
+Proof.
+  intro n1. intro n2. simpl. reflexivity.
+Qed.
+
+Lemma mult_Sss :
+  forall n1 n2,
+    mult (S n1) (S n2) = add (S n2) (mult n1 ( S n2)).
+Proof.
+  intro n1. intro n2. simpl. reflexivity.
+Qed.
+
+Lemma mult_S :
+  forall n1 n2,
+    mult n1 (S n2) = add n1 (mult n1 n2).
+Proof.
+  induction n1. intro n2. simpl.
+  - reflexivity.
+  - simpl. rewrite IHn1.
+Qed.
+
 Lemma mult_comm :
   forall n1 n2,
     mult n1 n2 = mult n2 n1.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  induction n1; intro n2; simpl.
+  - rewrite mult_O. reflexivity.
+  - rewrite IHn1. rewrite mult_S. reflexivity.
+Qed. (* Change to Qed when done *)
