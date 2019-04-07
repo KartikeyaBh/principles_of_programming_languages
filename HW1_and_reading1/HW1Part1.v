@@ -154,7 +154,9 @@ Proof.
   - reflexivity.
   - rewrite IHn1. reflexivity.
 Abort.
-  (* YOUR EXPLANATION HERE *)
+  (* This looks more difficult.  For the first version, the S on the left side
+     was applied to the first operand, which naturally meshes with how pattern-matching
+     works.  Here, I suspect we'll need to do more work to move it out. *)
 
 
 (*
@@ -253,43 +255,47 @@ Compute mult (S (S O)) (S (S (S O))).   (* should be S (S (S (S (S (S O))))), ak
  * prove them by induction.
  *)
 
-Lemma mult_O :
-  forall n,
-    mult n O = O.
+Lemma add_one_2nd_arg:
+  forall n1 n2,
+    S (add n1 n2) = add n1 (S n2).
 Proof.
-  induction n.
-  -auto.
-  - simpl. rewrite IHn. reflexivity.
+  induction n1; intro n2.
+  - simpl. reflexivity.
+  - simpl. rewrite IHn1. reflexivity.
 Qed.
 
-Lemma mult_Ss :
-  forall n1 n2,
-    add n2 (mult n1 n2) = mult (S n1) n2.
+Lemma add_swap:
+  forall n1 n2 n3,
+    add n1 (add n2 n3) = add n2 (add n1 n3).
 Proof.
-  intro n1. intro n2. simpl. reflexivity.
+  induction n1; intro n2.
+  - simpl. reflexivity.
+  - simpl. intro n3. rewrite IHn1. rewrite add_one_2nd_arg. reflexivity.
 Qed.
 
-Lemma mult_Sss :
-  forall n1 n2,
-    mult (S n1) (S n2) = add (S n2) (mult n1 ( S n2)).
+Lemma mult_zero:
+  forall n1,
+    mult n1 O = O.
 Proof.
-  intro n1. intro n2. simpl. reflexivity.
+  induction n1.
+  - simpl. reflexivity.
+  - simpl. rewrite IHn1. reflexivity.
 Qed.
 
-Lemma mult_S :
+Lemma mult_add_one:
   forall n1 n2,
-    mult n1 (S n2) = add n1 (mult n1 n2).
+    add n1 (mult n1 n2) = mult n1 (S n2).
 Proof.
-  induction n1. intro n2. simpl.
-  - reflexivity.
-  - simpl. rewrite IHn1.
+  induction n1; intro n2.
+  - simpl. reflexivity.
+  - simpl. rewrite add_swap. rewrite IHn1. reflexivity.
 Qed.
 
 Lemma mult_comm :
   forall n1 n2,
     mult n1 n2 = mult n2 n1.
 Proof.
-  induction n1; intro n2; simpl.
-  - rewrite mult_O. reflexivity.
-  - rewrite IHn1. rewrite mult_S. reflexivity.
-Qed. (* Change to Qed when done *)
+  induction n1; intro n2.
+  - simpl. rewrite mult_zero. reflexivity.
+  - simpl. rewrite IHn1. rewrite mult_add_one. reflexivity.
+Qed.
