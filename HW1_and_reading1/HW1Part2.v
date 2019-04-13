@@ -132,7 +132,91 @@ Qed.
  *
  * Hint: You'll probably need 1-2 more lemmas about mult and/or add.
  *)
-(* YOUR LEMMA STATEMENT AND PROOF HERE *)
+(*
+ * PROBLEM 2 [10 points, 5-10 tactics, plus 1-3 helper lemmas, each needing 5-10 tactics]
+ * State and prove that the `mult` function is associative.
+ *
+ * Hint: Feel free to look up what associative means.
+ *
+ * Hint: You'll probably need 1-2 more lemmas about mult and/or add.
+ *)
+
+Lemma add_assoc :
+  forall n1 n2 n3,
+    add n1 (add n2 n3) = add (add n1 n2) n3.
+Proof.
+  intros.
+  induct n1.
+  - simplify. reflexivity.
+  - simplify. rewrite IHn1. reflexivity.
+Qed.
+
+Lemma add_S :
+  forall n1 n2,
+    add n1 (S n2) = S (add n1 n2).
+Proof.
+    induction n1; intro n2; simpl.
+  - reflexivity.
+  - rewrite IHn1. reflexivity.
+Qed.
+
+Lemma add_O :
+  forall n1,
+    add n1 O = n1.
+Proof.
+  intros.
+  induct n1.
+  - simplify. reflexivity.
+  - simplify. rewrite IHn1. reflexivity.
+Qed.
+
+Lemma add_comm :
+  forall n1 n2,
+    add n1 n2 = add n2 n1.
+Proof.
+  induction n1; intro n2; simpl.
+  - rewrite add_O. reflexivity.
+  - rewrite add_S. rewrite IHn1. reflexivity.
+Qed.
+
+Lemma add_four_swap_middle :
+  forall n1 n2 n3 n4,
+    add (add n1 n2) (add n3 n4) = add (add n1 n3) (add n2 n4).
+Proof.
+  intros.
+  rewrite <- (add_assoc n1).
+  rewrite -> (add_assoc n2).
+  rewrite -> (add_comm n2).
+  rewrite <- (add_assoc n3).
+  rewrite -> (add_assoc n1).
+  reflexivity.
+Qed.
+
+Lemma mult_dist :
+  forall n1 n2 n3,
+    mult n1 (add n2 n3) = add (mult n1 n2) (mult n1 n3).
+Proof.
+  intros.
+  induct n1.
+  - simplify. reflexivity.
+  - simplify. rewrite IHn1. rewrite add_four_swap_middle. reflexivity.
+Qed.
+
+Lemma mult_assoc :
+  forall n1 n2 n3,
+    mult n1 (mult n2 n3) = mult (mult n1 n2) n3.
+Proof.
+  intros.
+  induct n1.
+  - simplify. reflexivity.
+  - simplify.
+    rewrite IHn1.
+    rewrite (mult_comm (add n2 (mult n1 n2)) n3).
+    rewrite mult_dist.
+    rewrite (mult_comm n3 n2).
+    rewrite (mult_comm n3 (mult n1 n2)).
+    reflexivity.
+Qed.
 
 End leftover_from_part_1. (* close the namespace *)
 
