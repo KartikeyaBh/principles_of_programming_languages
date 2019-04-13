@@ -79,12 +79,50 @@ Fixpoint mult (n1 : nat) (n2 : nat) : nat :=
  * prove them by induction.
  *)
 
+Lemma add_one_2nd_arg:
+  forall n1 n2,
+    S (add n1 n2) = add n1 (S n2).
+Proof.
+  induction n1; intro n2.
+  - simpl. reflexivity.
+  - simpl. rewrite IHn1. reflexivity.
+Qed.
+
+Lemma add_swap:
+  forall n1 n2 n3,
+    add n1 (add n2 n3) = add n2 (add n1 n3).
+Proof.
+  induction n1; intro n2.
+  - simpl. reflexivity.
+  - simpl. intro n3. rewrite IHn1. rewrite add_one_2nd_arg. reflexivity.
+Qed.
+
+Lemma mult_zero:
+  forall n1,
+    mult n1 O = O.
+Proof.
+  induction n1.
+  - simpl. reflexivity.
+  - simpl. rewrite IHn1. reflexivity.
+Qed.
+
+Lemma mult_add_one:
+  forall n1 n2,
+    add n1 (mult n1 n2) = mult n1 (S n2).
+Proof.
+  induction n1; intro n2.
+  - simpl. reflexivity.
+  - simpl. rewrite add_swap. rewrite IHn1. reflexivity.
+Qed.
+
 Lemma mult_comm :
   forall n1 n2,
     mult n1 n2 = mult n2 n1.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  induction n1; intro n2.
+  - simpl. rewrite mult_zero. reflexivity.
+  - simpl. rewrite IHn1. rewrite mult_add_one. reflexivity.
+Qed.
 
 (*
  * PROBLEM 2 [10 points, 5-10 tactics, plus 1-3 helper lemmas, each needing 5-10 tactics]
