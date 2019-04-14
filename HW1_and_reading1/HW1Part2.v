@@ -490,13 +490,6 @@ Qed. (* Change to Qed when done *)
  * stuck during a direct proof.
  *)
 
-Theorem rev_hd : forall A (l hd : list A),
-    rev(l ++ hd) = rev(hd) ++ rev(l).
-Proof.
-Admitted.
-
-Theorem rev'_cons: forall 
-rev' (hd :: ls)
 
 Theorem rev'_ok : forall A (ls : list A),
     rev' ls = rev ls.
@@ -527,14 +520,17 @@ Fixpoint sum_list (l : list nat) : nat :=
   match l with
   | [] => 0
   | x :: xs => x + sum_list xs
-  end.
+  end.  
 
 (*
  * PROBLEM 9 [5 points, ~5 LOC]
  * Define a function that adds up all the elements of a tree of nats.
  *)
 Fixpoint sum_tree (t : tree nat) : nat :=
-0. (* YOUR CODE HERE *)
+  match t with
+  | Leaf => 0
+  | Node l d r => (sum_tree l) + d + (sum_tree r) 
+  end.
 
 (*
  * PROBLEM 10 [5 points, ~5 tactics]
@@ -544,8 +540,10 @@ Lemma sum_tree_reverse :
   forall t,
     sum_tree (reverse t) = sum_tree t.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  intros. induct t.
+  - simplify. reflexivity.
+  - simplify. rewrite IHt1. rewrite IHt2. linear_arithmetic.
+Qed. (* Change to Qed when done *)
 
 (*
  * PROBLEM 11 [12 points, 5-10 tactics, plus 1 helper lemma needing ~5 tactics]
@@ -555,12 +553,24 @@ Admitted. (* Change to Qed when done *)
  *
  * Hint: You'll need a helper lemma about sum_list.
  *)
+
+Lemma sum_list_app :
+  forall l1 l2,
+    sum_list (l1 ++ l2) = sum_list l1 + sum_list l2.
+Proof.
+  intros. induct l1.
+  - simplify. reflexivity.
+  - simplify. rewrite IHl1. ring.
+Qed.
+
 Lemma sum_list_rev :
   forall l,
     sum_list (rev l) = sum_list l.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  intros. induct l.
+  - simplify. reflexivity.
+  - simplify. rewrite sum_list_app. simplify. rewrite IHl. ring.
+Qed. (* Change to Qed when done *)
 
 (* --- Syntax practice --- *)
 
@@ -602,8 +612,11 @@ Lemma kind_sum_commuter :
   forall e,
     kinda_sum e = kinda_sum (commuter e).
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  intros. induct e.
+  - simplify. reflexivity.
+  - simplify. rewrite IHe1. rewrite IHe2. ring.
+  - simplify. rewrite IHe1. rewrite IHe2. ring.
+Qed. (* Change to Qed when done *)
 
 
 (* --- The End --- *)
