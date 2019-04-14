@@ -254,9 +254,22 @@ Qed.
  * be sure to state your yes/no answer clearly before proceeding to explain.
  *
  *   - Why does `linear_arithmetic` succeed on `add_comm_again`, but fail on `mult_comm_again`?
+       Linear_arithmetic supports only addition. It supports multiplication by constants. 
+
  *   - Why does `ring` succeed on `mult_comm_again`?
+       Ring is used to normalize any ring structure(i.e. structures having rings and semi-rings
+       like x(3+yx+25(1−z))+zx). A ring in a basic sense satisfies
+       all the properties of addition and multiplication. The basic use of ring is to simplify 
+       ring expressions, so that the user does not have to deal manually with the 
+       theorems of associativity and commutativity. In a ring structure, associativity and 
+       distributivity of multiplication is supported.
+
  *   - Will `ring` succeed on `add_comm_again`? Why or why not?
+       It will succeed. In ring structure addition is commutative and associative.
+
  *   - Is `ring` always more powerful than `linear_arithmetic`? Why or why not?
+       I think 'ring' is a superset of linear arithmetic. So it should be more powerful than
+       linear_arithmetic always.
  *)
 
 
@@ -281,6 +294,9 @@ Inductive empty : Type :=
  * PROBLEM 4 [5 points, 1-2 sentences]
  * Explain in your own words the relationship between `unit` and `True`, and between
  * `empty` and `False`.
+   unit is just any type. Whenever a label "tt" occurs we specify it as true.
+   "empty" is a type which does not match to anything. So we cannot create false 
+   from anything.
  *)
 
 (*
@@ -302,8 +318,11 @@ Lemma unit_id_same :
   forall x,
     unit_id1 x = unit_id2 x.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  intros.
+  rewrite unit_id1.
+  rewrite unit_id2.
+  reflexivity.
+Qed. (* Change to Qed when done *)
 
 (*
  * By analogy, we can also present two different proofs that True implies True.
@@ -368,6 +387,26 @@ Print True_implies_True2.
  * you saw by using the Print command on your proofs.
  *)
 (* YOUR CODE HERE*)
+Lemma False_implies_False1 :
+  False -> False.
+Proof.
+  intro H. (* first way: just take the evidence of True and use it directly *)
+  apply H.
+Qed.
+
+Lemma False_implies_False2 :
+  False -> False.
+Proof.
+  intro H. (* second way: take apart the evidence of True and put it back together *)
+  cases H.
+Qed.
+
+Print False_implies_False1.
+Print False_implies_False2.
+
+Definition false_id1 (x : unit) : unit := x.  (* first way: just return the argument *)
+(* @David What does second one mean? *)
+
 
 End curry_howard.
 
@@ -420,12 +459,23 @@ Definition rev' {A} (ls : list A) : list A :=
  * Hint: You'll need a helper lemma from lecture. Feel free to copy-paste it
  * when you find it.
  *)
+
+Theorem length_app : forall A (ls1 ls2 : list A),
+    length (ls1 ++ ls2) = length ls1 + length ls2.
+Proof.
+  induct ls1; simplify; equality.
+Qed.
+
 Lemma length_rev :
   forall A (l : list A),
     length (rev l) = length l.
 Proof.
   (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  induct l.
+  - simplify. reflexivity.
+  - simplify. reflexivity.
+  - simplify. rewrite length_app. rewrite IHl. simplify. linear_arithmetic.
+Qed. (* Change to Qed when done *)
 
 (*
  * PROBLEM 8 [10 points, (1 alternate proof and a few sentences comparing to Adam's proof)
@@ -440,10 +490,20 @@ Admitted. (* Change to Qed when done *)
  * stuck during a direct proof.
  *)
 
+Theorem rev_hd : forall A (l hd : list A),
+    rev(l ++ hd) = rev(hd) ++ rev(l).
+Proof.
+Admitted.
+
+Theorem rev'_cons: forall 
+rev' (hd :: ls)
+
 Theorem rev'_ok : forall A (ls : list A),
     rev' ls = rev ls.
 Proof.
-  (* YOUR CODE HERE *)
+  induct ls.
+  - simplify. reflexivity.
+  - simplify. simplify.
 Admitted. (* Change to Qed when done *)
 
 (* --- Binary Tree practice --- *)

@@ -1,3 +1,8 @@
+(* THIS WAS DONE BY DAVID KLOCK AND KARTIKEYA BHARDWAJ)
+
+
+
+
 (* --- Homework 1, Part 1: Introduction to Coq --- *)
 
 (*
@@ -18,6 +23,7 @@
  * the hard part is just getting up to speed on Coq.
  *)
 
+(* THIS WAS DONE BY DAVID KLOCK AND KARTIKEYA BHARDWAJ)
 
 (* --- Setting up Coq --- *)
 
