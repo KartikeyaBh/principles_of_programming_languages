@@ -490,13 +490,16 @@ Qed. (* Change to Qed when done *)
  * stuck during a direct proof.
  *)
 
-
+(* I am unable to come up with a better proof.
+   @David, at the second step this is shouting for a lemma like rev_append_ok to be proven.
+    Maybe we can write that?
+*)
 Theorem rev'_ok : forall A (ls : list A),
     rev' ls = rev ls.
 Proof.
   induct ls.
   - simplify. reflexivity.
-  - simplify. simplify.
+  - simplify. unfold rev'.
 Admitted. (* Change to Qed when done *)
 
 (* --- Binary Tree practice --- *)
