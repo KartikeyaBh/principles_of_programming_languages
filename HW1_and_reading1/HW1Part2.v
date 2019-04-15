@@ -322,7 +322,7 @@ Proof.
   rewrite unit_id1.
   rewrite unit_id2.
   reflexivity.
-Qed. (* Change to Qed when done *)
+Qed.
 
 (*
  * By analogy, we can also present two different proofs that True implies True.
@@ -386,7 +386,6 @@ Print True_implies_True2.
  * Hint: If you're stuck on the definitions, you can work by analogy to the proof terms
  * you saw by using the Print command on your proofs.
  *)
-(* YOUR CODE HERE*)
 Lemma False_implies_False1 :
   False -> False.
 Proof.
@@ -404,9 +403,10 @@ Qed.
 Print False_implies_False1.
 Print False_implies_False2.
 
-Definition false_id1 (x : unit) : unit := x.  (* first way: just return the argument *)
-(* @David What does second one mean? *)
-
+Definition empty_id1 (x : empty) : empty := x.  (* first way: just return the argument *)
+Definition empty_id2 (x : empty) : empty :=     (* second way: take the argument apart *)
+  match x with
+  end.
 
 End curry_howard.
 
@@ -470,12 +470,10 @@ Lemma length_rev :
   forall A (l : list A),
     length (rev l) = length l.
 Proof.
-  (* YOUR CODE HERE *)
   induct l.
   - simplify. reflexivity.
-  - simplify. reflexivity.
   - simplify. rewrite length_app. rewrite IHl. simplify. linear_arithmetic.
-Qed. (* Change to Qed when done *)
+Qed.
 
 (*
  * PROBLEM 8 [10 points, (1 alternate proof and a few sentences comparing to Adam's proof)
@@ -490,17 +488,52 @@ Qed. (* Change to Qed when done *)
  * stuck during a direct proof.
  *)
 
-(* I am unable to come up with a better proof.
-   @David, at the second step this is shouting for a lemma like rev_append_ok to be proven.
-    Maybe we can write that?
-*)
-Theorem rev'_ok : forall A (ls : list A),
+(* The proof below works, but is more complex and less intuitive than Adam's proof.
+   The natural approach to the proof -- the one I, at least, would come up with just
+   on instinct -- would involve rev_append_ok.  The proof here "worked backward" in
+   a sense -- note the step where it applies a reverse rewrite of the inductive
+   hypothesis in the rev'_ok proof.
+   
+   On the other hand, inverting the theorem itself might have made this a more
+   natural-feeling approach. *)
+Lemma app_assoc :
+  forall A (ls1 : list A) (ls2 : list A) (ls3 : list A),
+    (ls1 ++ ls2) ++ ls3 = ls1 ++ (ls2 ++ ls3).
+Proof.
+  intros.
+  induct ls1.
+  - simplify. reflexivity.
+  - simplify. rewrite IHls1. reflexivity.
+Qed.
+
+Lemma rev_append_empty_acc :
+  forall A (ls1 : list A) (ls2 : list A),
+    rev_append ls1 ls2 = rev_append ls1 [] ++ ls2.
+Proof.
+  intros.
+  induct ls1.
+  - simplify. reflexivity.
+  - simplify.
+    rewrite IHls1.
+    rewrite (IHls1 [hd]).
+    rewrite app_assoc.
+    simplify.
+    reflexivity.
+Qed.
+
+Theorem rev'_ok :
+  forall A (ls : list A),
     rev' ls = rev ls.
 Proof.
   induct ls.
   - simplify. reflexivity.
-  - simplify. unfold rev'.
-Admitted. (* Change to Qed when done *)
+  - simplify.
+    rewrite <- IHls.
+    unfold rev'.
+    simplify.
+    rewrite rev_append_empty_acc.
+    reflexivity.
+Qed.
 
 (* --- Binary Tree practice --- *)
 
@@ -546,7 +579,7 @@ Proof.
   intros. induct t.
   - simplify. reflexivity.
   - simplify. rewrite IHt1. rewrite IHt2. linear_arithmetic.
-Qed. (* Change to Qed when done *)
+Qed.
 
 (*
  * PROBLEM 11 [12 points, 5-10 tactics, plus 1 helper lemma needing ~5 tactics]
@@ -573,7 +606,7 @@ Proof.
   intros. induct l.
   - simplify. reflexivity.
   - simplify. rewrite sum_list_app. simplify. rewrite IHl. ring.
-Qed. (* Change to Qed when done *)
+Qed.
 
 (* --- Syntax practice --- *)
 
@@ -619,7 +652,7 @@ Proof.
   - simplify. reflexivity.
   - simplify. rewrite IHe1. rewrite IHe2. ring.
   - simplify. rewrite IHe1. rewrite IHe2. ring.
-Qed. (* Change to Qed when done *)
+Qed.
 
 
 (* --- The End --- *)
