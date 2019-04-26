@@ -99,8 +99,8 @@ Module MapAssocList (K : SET_WITH_EQUALITY) <: MAP.
     | [] => []
     | (k2, v2) :: m' =>
       if K.equal k k2
-      then m'
-      else remove m' k
+      then remove m' k
+      else (k2, v2) :: remove m' k
     end.
 
 
@@ -119,10 +119,8 @@ Module MapAssocList (K : SET_WITH_EQUALITY) <: MAP.
     simplify.
     pose proof (K.equal_ok k2 k1).
     cases(K.equal k2 k1).
-    -equality.
-    -simplify. cases(lookup m k2).
-      +simplify. equality.
-      + equality.
+    - equality.
+    - equality.
   Qed.
 
   Lemma lookup_add_ne : forall V k1 k2 v (m : t V), k1 <> k2 -> lookup (add m k1 v) k2 = lookup m k2.
@@ -130,12 +128,9 @@ Module MapAssocList (K : SET_WITH_EQUALITY) <: MAP.
     simplify.
     pose proof (K.equal_ok k2 k1).
     cases(K.equal k2 k1).
-    - cases(lookup m k2).
-      + simplify. equality.
-      + equality. 
+    - equality.
     - equality.
   Qed.
-
 
   (* PROBLEM 4 [5 points, ~20 tactics per proof]
    * Prove the following two facts about looking up keys in a map returned by `remove`.
@@ -144,19 +139,40 @@ Module MapAssocList (K : SET_WITH_EQUALITY) <: MAP.
    * that your implementation of `remove` really has this property, and adjust your
    * implementation if you realize it does not.
    *)
-(* @David I think my implementation of remove might be wrong *)
   Lemma lookup_remove_eq : forall V k1 k2 (m : t V), k1 = k2 -> lookup (remove m k1) k2 = None.
   Proof.
-    simplify.
-    pose proof (K.equal_ok k2 k1).
-    cases(K.equal k2 k1).
-    - cases(remove m k1).
-  Admitted.
+    intros.
+    induct m.
+    - simplify. equality.
+    - destruct a.
+      simplify.
+      cases (K.equal k1 k).
+      + apply IHm. apply H.
+      + simplify.
+        cases (K.equal k2 k).
+        * equality.
+        * apply IHm. apply H.
+  Qed.
 
   Lemma lookup_remove_ne : forall V k1 k2 (m : t V), k1 <> k2 -> lookup (remove m k1) k2 = lookup m k2.
   Proof.
-    (* YOUR CODE HERE *)
-  Admitted.
+    intros.
+    induct m.
+    - simplify. equality.
+    - destruct a.
+      simplify.
+      cases (K.equal k1 k); cases (K.equal k2 k);
+        pose proof (K.equal_ok k1 k); rewrite Heq in H0;
+        pose proof (K.equal_ok k2 k); rewrite Heq0 in H1.
+      + equality.
+      + equality.
+      + rewrite <- H1. simplify. cases (K.equal k2 k2).
+        * equality.
+        * equality.
+      + simplify. cases (K.equal k2 k).
+        * equality.
+        * apply IHm. equality.
+  Qed.
 End MapAssocList.
 
 (* Here's a little utility module from Frap to show nats have equality. *)
@@ -243,7 +259,11 @@ Module StreamsAsSteppers.
     intros.
     induct n.
     - equality.
-    - (* @David how the hell does let work *)
+    - simplify.
+      cases (step s).
+      simplify.
+      rewrite IHn.
+      equality.
   Qed.
 
   (* Now here's an example of a stream: the stream of all natural numbers.
@@ -277,7 +297,10 @@ Module StreamsAsSteppers.
       run_stepper nats n s =
       List.map (fun x => s + x) (run_stepper nats n 0).
   Proof.
-    (* YOUR CODE HERE *)
+    intros.
+    induct n.
+    - simplify. equality.
+    - simplify.
   Admitted.
 
 
