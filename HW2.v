@@ -278,6 +278,62 @@ Module StreamsAsSteppers.
    *)
   Compute run_stepper nats 10 0.
 
+  Lemma add_zero :
+    forall n,
+      n + 0 = n.
+  Proof.
+    auto.
+  Qed.
+
+  Lemma run_stepper_empty_n_zero :
+    forall s n,
+      run_stepper nats n s = [] -> n = 0.
+  Proof.
+    intros.
+    cases n.
+    - equality.
+    - simplify. equality.
+  Qed.
+
+  Lemma run_stepper_S_n_not_empty :
+    forall s n,
+      run_stepper nats (S n) s <> [].
+  Proof.
+    intros.
+    cases n.
+    - simplify. equality.
+    - simplify. equality.
+  Qed.
+
+  Lemma map_empty_input_empty :
+    forall {A} l (m : A -> A),
+      map m l = [] -> l = [].
+  Proof.
+    intros.
+    cases l.
+    - equality.
+    - simplify. equality.
+  Qed.
+
+  Lemma map_composition :
+    forall m n s,
+      map m (run_stepper nats n s) = run_stepper nats n (m s).
+  Proof.
+    intros.
+    induct n.
+    - simplify. equality.
+    - simplify.
+  Admitted.
+
+  Lemma run_stepper_nats_helper :
+    forall s n a,
+      run_stepper nats n (s + a) =
+      List.map (fun x => s + x) (run_stepper nats n a).
+  Proof.
+    intros.
+    induct a.
+    - rewrite (add_zero s). simplify.
+  Admitted.
 
   (* PROBLEM 6 [10 points, ~4 tactics + 1 helper lemma needing ~7 tactics]
    * Prove the following theorem about `run_stepper` on `nats`, which says
@@ -300,8 +356,12 @@ Module StreamsAsSteppers.
     intros.
     induct n.
     - simplify. equality.
-    - simplify.
-  Admitted.
+    - simplify. rewrite (add_zero s).
+    (*intros.
+    pose proof run_stepper_nats_helper.
+    rewrite <- (add_zero s) at 1.
+    apply H with (a := 0).*)
+  Qed.
 
 
   (* PROBLEM 7 [5 points, ~2 LOC]
@@ -314,9 +374,10 @@ Module StreamsAsSteppers.
    * Also, use the `Compute` command to give at least one example of running your
    * stream for a few steps from its initial state.
    *)
-  (* YOUR CODE HERE *)
+  Example fibonacci : stepper (nat * nat) nat := fun state =>
+    let (n1, n2) := state in (n1 + n2, (n2, n1 + n2)).
 
-  (* YOUR `Compute` EXAMPLE HERE WITH INITIAL STATE *)
+  Compute run_stepper fibonacci 10 (0, 1).
 
 
   (* In addition to specific examples, we can define stream transformers,
@@ -328,6 +389,9 @@ Module StreamsAsSteppers.
       let (n, s') := step s in
       (n + 1, s').
 
+  Compute run_stepper (inc_stepper nats) 10 1.
+  Compute run_stepper nats 10 2.
+
   (* PROBLEM 8 [5 points, 1 line of specification and ~7 tactics of proof]
    * Complete the statement of the following theorem that explains what
    * inc_stepper does to the `nats` stream. Then prove your resulting theorem.
@@ -335,9 +399,12 @@ Module StreamsAsSteppers.
   Lemma run_inc_stepper_nats :
     forall n s,
       run_stepper (inc_stepper nats) n s =
-      []. (* YOUR CODE HERE *) 
+        run_stepper nats n (s + 1).
   Proof.
-    (* YOUR CODE HERE *)
+    intros.
+    induct n.
+    - simplify. equality.
+    - 
   Admitted.
 
   (* Generalizing from inc_stepper, a common way to transform streams is
