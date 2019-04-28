@@ -361,7 +361,7 @@ Module StreamsAsSteppers.
     pose proof run_stepper_nats_helper.
     rewrite <- (add_zero s) at 1.
     apply H with (a := 0).*)
-  Qed.
+  Admitted.
 
 
   (* PROBLEM 7 [5 points, ~2 LOC]
@@ -415,9 +415,10 @@ Module StreamsAsSteppers.
    * Complete the definition of map_stepper. Then prove the lemma below.
    *)
   (* insert `:=` on the next line before the '.', then add your solution. *)
-  Definition map_stepper {T A B} (f : A -> B) (step : stepper T A) : stepper T B.
-    (* YOUR CODE HERE *)
-  Admitted. (* delete this *)
+  Definition map_stepper {T A B} (f : A -> B) (step : stepper T A) : stepper T B
+    := fun s =>
+      let (e, s') := step s in
+      ((f e), s').
 
   Compute run_stepper (map_stepper (fun n => 7 * n + 3) nats) 10 0.
   (* should be: [3; 10; 17; 24; 31; 38; 45; 52; 59; 66] *)
@@ -427,8 +428,20 @@ Module StreamsAsSteppers.
     forall T A B (step : stepper T A) (f : A -> B) n s,
       run_stepper (map_stepper f step) n s = List.map f (run_stepper step n s).
   Proof.
-    (* YOUR CODE HERE *)
+    intros.
+    induct n.
+    - equality.
+    - simplify. cases (map_stepper f step s). cases (step s). simplify.
   Admitted.
+
+(*
+  Fixpoint run_stepper {T A} (step : stepper T A) (n : nat) (s : T) : list A :=
+    match n with
+    | O => []
+    | S n' =>
+      let (a, s) := step s in
+      a :: run_stepper step n' s
+    end.*)
 
   (* Here's another stream transformer. *)
   Definition mystery_transformer {T A} (step: stepper T A) : stepper T A :=
@@ -568,13 +581,77 @@ Module MoreInterpreters.
    * Hint: It may help to review the proof of `factorial` in Interpreters.v, especially
    * the lemma about the body of its main loop.
    *)
+  Definition fibonacci_body :=
+    "tmp" <- "next" + "current";
+    "current" <- "next";
+    "next" <- "tmp".
+  (*
+   1 1 2
+   c  n  n+1
+   2 10  12
+  10 12  22
+  12 22  34
+  *)
+
+  Lemma fibonacci_ok'_1_1 : forall count v,
+    v $? "current" = Some 1
+    -> v $? "next" = Some 1
+    -> selfCompose (exec fibonacci_body) count v
+       = v $+ ("current", fib_tail count 1 1)
+           $+ ("next", (fib_tail (count + 1) 1 1)).
+  Proof.
+  Admitted.
+
+  Lemma fibonacci_ok' : forall count current next v,
+    v $? "current" = Some current
+    -> v $? "next" = Some next
+    -> selfCompose (exec fibonacci_body) count v
+       = v $+ ("current", fib_tail count next current)
+           $+ ("next", (fib_tail (count + 1) next current)).
+  Proof.
+    induct count; simplify.
+    - maps_equal.
+      + rewrite H0. equality.
+      + rewrite H. equality.
+    - rewrite H0. rewrite H.
+      rewrite (IHcount next (next + current)).
+      maps_equal.
+      + admit.
+      + simplify. equality.
+      + simplify. equality.
+  Admitted.
+
+  Lemma fibonacci_ok'_tmp : forall count current next v,
+    v $? "current" = Some current
+    -> v $? "next" = Some next
+    -> v $? "tmp" = Some next
+    -> selfCompose (exec fibonacci_body) count v
+       = v $+ ("current", fib_tail count next current)
+           $+ ("next", (fib_tail (count + 1) next current))
+           $+ ("tmp", (fib_tail (count + 1) next current)).
+  Proof.
+    induct count; simplify.
+    - maps_equal.
+      + trivial.
+      + rewrite H0. equality.
+      + rewrite H. equality.
+    - rewrite H0. rewrite H.
+      rewrite (IHcount next (next + current)).
+      maps_equal.
+      + simplify. equality.
+      + simplify. equality.
+      + simplify. equality.
+  Qed.
+
   Theorem fibonacci_ok :
     forall v input,
       v $? "input" = Some input ->
       exec fibonacci v $? "output" = Some (fib_tail input 1 1).
   Proof.
-    (* YOUR CODE HERE *)
-  Admitted.
+    simplify.
+    rewrite H.
+    rewrite (fibonacci_ok'_1_1 input); simplify; equality.
+  Qed.
 
 End MoreInterpreters.
 
