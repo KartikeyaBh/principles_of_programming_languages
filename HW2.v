@@ -278,63 +278,6 @@ Module StreamsAsSteppers.
    *)
   Compute run_stepper nats 10 0.
 
-  Lemma add_zero :
-    forall n,
-      n + 0 = n.
-  Proof.
-    auto.
-  Qed.
-
-  Lemma run_stepper_empty_n_zero :
-    forall s n,
-      run_stepper nats n s = [] -> n = 0.
-  Proof.
-    intros.
-    cases n.
-    - equality.
-    - simplify. equality.
-  Qed.
-
-  Lemma run_stepper_S_n_not_empty :
-    forall s n,
-      run_stepper nats (S n) s <> [].
-  Proof.
-    intros.
-    cases n.
-    - simplify. equality.
-    - simplify. equality.
-  Qed.
-
-  Lemma map_empty_input_empty :
-    forall {A} l (m : A -> A),
-      map m l = [] -> l = [].
-  Proof.
-    intros.
-    cases l.
-    - equality.
-    - simplify. equality.
-  Qed.
-
-  Lemma map_composition :
-    forall m n s,
-      map m (run_stepper nats n s) = run_stepper nats n (m s).
-  Proof.
-    intros.
-    induct n.
-    - simplify. equality.
-    - simplify.
-  Admitted.
-
-  Lemma run_stepper_nats_helper :
-    forall s n a,
-      run_stepper nats n (s + a) =
-      List.map (fun x => s + x) (run_stepper nats n a).
-  Proof.
-    intros.
-    induct a.
-    - rewrite (add_zero s). simplify.
-  Admitted.
-
   (* PROBLEM 6 [10 points, ~4 tactics + 1 helper lemma needing ~7 tactics]
    * Prove the following theorem about `run_stepper` on `nats`, which says
    * that if we run from a non-zero state `s`, that's the same as adding
@@ -348,20 +291,42 @@ Module StreamsAsSteppers.
    * or you can prove a lemma (or find one in stdlib) about mapping two
    * functions back to back.
    *)
+  Lemma add_zero :
+    forall n,
+      n + 0 = n.
+  Proof.
+    auto.
+  Qed.
+
+  Lemma s_plus_a_plus_1_associativity :
+    forall s a,
+      s + a + 1 = s + (a + 1).
+  Proof.
+    intros.
+    linear_arithmetic.
+  Qed.
+
+  Lemma run_stepper_nats_helper :
+    forall n s a,
+      run_stepper nats n (s + a) =
+      List.map (fun x => s + x) (run_stepper nats n a).
+  Proof.
+    intro n.
+    induct n.
+    - simplify. equality.
+    - simplify. rewrite <- IHn. rewrite s_plus_a_plus_1_associativity. equality.
+  Qed.
+
   Lemma run_stepper_nats :
     forall s n,
       run_stepper nats n s =
       List.map (fun x => s + x) (run_stepper nats n 0).
   Proof.
     intros.
-    induct n.
-    - simplify. equality.
-    - simplify. rewrite (add_zero s).
-    (*intros.
     pose proof run_stepper_nats_helper.
     rewrite <- (add_zero s) at 1.
-    apply H with (a := 0).*)
-  Admitted.
+    apply H with (a := 0).
+  Qed.
 
 
   (* PROBLEM 7 [5 points, ~2 LOC]
@@ -401,11 +366,11 @@ Module StreamsAsSteppers.
       run_stepper (inc_stepper nats) n s =
         run_stepper nats n (s + 1).
   Proof.
-    intros.
+    intro n.
     induct n.
     - simplify. equality.
-    - 
-  Admitted.
+    - simplify. rewrite IHn. equality. 
+  Qed.
 
   (* Generalizing from inc_stepper, a common way to transform streams is
    * to apply some function to each element. We call this `map_stepper`
@@ -428,10 +393,10 @@ Module StreamsAsSteppers.
     forall T A B (step : stepper T A) (f : A -> B) n s,
       run_stepper (map_stepper f step) n s = List.map f (run_stepper step n s).
   Proof.
-    intros.
+    intro n.
     induct n.
     - equality.
-    - simplify. cases (map_stepper f step s). cases (step s). simplify.
+    - simplify. cases (map_stepper f step s). cases (step s).
   Admitted.
 
 (*
@@ -600,6 +565,35 @@ Module MoreInterpreters.
        = v $+ ("current", fib_tail count 1 1)
            $+ ("next", (fib_tail (count + 1) 1 1)).
   Proof.
+    induct count; simplify.
+    - maps_equal.
+      + rewrite H0. equality.
+      + rewrite H. equality.
+    - rewrite H0. rewrite H.
+      rewrite (IHcount next (next + current)).
+      maps_equal.
+      + simplify. equality.
+      + simplify. equality.
+      + simplify. equality.
+  Admitted.
+
+  Lemma fibonacci_ok'_1_1_greater_than_0 : forall count v,
+    v $? "current" = Some 1
+    -> v $? "next" = Some 1
+    -> 0 < count
+    -> selfCompose (exec fibonacci_body) count v
+       = v $+ ("current", fib_tail count 1 1)
+           $+ ("next", (fib_tail (count + 1) 1 1))
+           $+ ("tmp", (fib_tail (count + 1) 1 1)).
+  Proof.
+    induct count; simplify.
+    - linear_arithmetic.
+    - rewrite H0. rewrite H.
+      rewrite (IHcount).
+      maps_equal.
+      + simplify. equality.
+      + simplify. equality.
+      + simplify. equality.
   Admitted.
 
   Lemma fibonacci_ok' : forall count current next v,
