@@ -550,72 +550,8 @@ Module MoreInterpreters.
     "tmp" <- "next" + "current";
     "current" <- "next";
     "next" <- "tmp".
-  (*
-   1 1 2
-   c  n  n+1
-   2 10  12
-  10 12  22
-  12 22  34
-  *)
-
-  Lemma fibonacci_ok'_1_1 : forall count v,
-    v $? "current" = Some 1
-    -> v $? "next" = Some 1
-    -> selfCompose (exec fibonacci_body) count v
-       = v $+ ("current", fib_tail count 1 1)
-           $+ ("next", (fib_tail (count + 1) 1 1)).
-  Proof.
-    induct count; simplify.
-    - maps_equal.
-      + rewrite H0. equality.
-      + rewrite H. equality.
-    - rewrite H0. rewrite H.
-      rewrite (IHcount next (next + current)).
-      maps_equal.
-      + simplify. equality.
-      + simplify. equality.
-      + simplify. equality.
-  Admitted.
-
-  Lemma fibonacci_ok'_1_1_greater_than_0 : forall count v,
-    v $? "current" = Some 1
-    -> v $? "next" = Some 1
-    -> 0 < count
-    -> selfCompose (exec fibonacci_body) count v
-       = v $+ ("current", fib_tail count 1 1)
-           $+ ("next", (fib_tail (count + 1) 1 1))
-           $+ ("tmp", (fib_tail (count + 1) 1 1)).
-  Proof.
-    induct count; simplify.
-    - linear_arithmetic.
-    - rewrite H0. rewrite H.
-      rewrite (IHcount).
-      maps_equal.
-      + simplify. equality.
-      + simplify. equality.
-      + simplify. equality.
-  Admitted.
 
   Lemma fibonacci_ok' : forall count current next v,
-    v $? "current" = Some current
-    -> v $? "next" = Some next
-    -> selfCompose (exec fibonacci_body) count v
-       = v $+ ("current", fib_tail count next current)
-           $+ ("next", (fib_tail (count + 1) next current)).
-  Proof.
-    induct count; simplify.
-    - maps_equal.
-      + rewrite H0. equality.
-      + rewrite H. equality.
-    - rewrite H0. rewrite H.
-      rewrite (IHcount next (next + current)).
-      maps_equal.
-      + admit.
-      + simplify. equality.
-      + simplify. equality.
-  Admitted.
-
-  Lemma fibonacci_ok'_tmp : forall count current next v,
     v $? "current" = Some current
     -> v $? "next" = Some next
     -> v $? "tmp" = Some next
@@ -644,7 +580,11 @@ Module MoreInterpreters.
   Proof.
     simplify.
     rewrite H.
-    rewrite (fibonacci_ok'_1_1 input); simplify; equality.
+    rewrite (fibonacci_ok' input 1 1).
+    + simplify. equality.
+    + simplify. equality.
+    + simplify. equality.
+    + simplify. equality.
   Qed.
 
 End MoreInterpreters.
