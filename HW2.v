@@ -339,6 +339,10 @@ Module StreamsAsSteppers.
    * Also, use the `Compute` command to give at least one example of running your
    * stream for a few steps from its initial state.
    *)
+  Example zeroes : stepper nat nat := fun n => (0, 10).
+
+  Compute run_stepper zeroes 10 0.
+
   Example fibonacci : stepper (nat * nat) nat := fun state =>
     let (n1, n2) := state in (n1 + n2, (n2, n1 + n2)).
 
@@ -369,7 +373,7 @@ Module StreamsAsSteppers.
     intro n.
     induct n.
     - simplify. equality.
-    - simplify. rewrite IHn. equality. 
+    - simplify. rewrite <- IHn. equality.
   Qed.
 
   (* Generalizing from inc_stepper, a common way to transform streams is
@@ -393,10 +397,10 @@ Module StreamsAsSteppers.
     forall T A B (step : stepper T A) (f : A -> B) n s,
       run_stepper (map_stepper f step) n s = List.map f (run_stepper step n s).
   Proof.
-    intro n.
+    simplify.
     induct n.
     - equality.
-    - simplify. cases (map_stepper f step s). cases (step s).
+    - 
   Admitted.
 
 (*
