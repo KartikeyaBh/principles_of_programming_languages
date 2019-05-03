@@ -446,11 +446,15 @@ Module StreamsAsSteppers.
   Lemma run_stepper_mystery_transformer :
     forall T A (step : stepper T A) n s,
       run_stepper (mystery_transformer step) n s =
-      list_skip A (run_stepper step (2 * n) s).
+      list_skip A (run_stepper step (n + n) s).
   Proof.
     induct n.
     - simplify. equality.
-    - simplify.
+    - simplify.  
+      cases(mystery_transformer step s). cases(step s). rewrite IHn.
+      unfold mystery_transformer in Heq. rewrite Heq0 in Heq.
+      cases(list_skip A).
+      + simplify.
   Admitted.
 
   (* Above, we defined a function map_stepper by analogy to List.map.
