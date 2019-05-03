@@ -397,20 +397,17 @@ Module StreamsAsSteppers.
     forall T A B (step : stepper T A) (f : A -> B) n s,
       run_stepper (map_stepper f step) n s = List.map f (run_stepper step n s).
   Proof.
-    simplify.
     induct n.
-    - equality.
-    - 
-  Admitted.
-
-(*
-  Fixpoint run_stepper {T A} (step : stepper T A) (n : nat) (s : T) : list A :=
-    match n with
-    | O => []
-    | S n' =>
-      let (a, s) := step s in
-      a :: run_stepper step n' s
-    end.*)
+    - simplify. equality.
+    - simplify.
+      cases (map_stepper f step s).
+      cases (step s).
+      simplify.
+      rewrite IHn.
+      unfold map_stepper in Heq.
+      rewrite Heq0 in Heq.
+      equality.
+  Qed.
 
   (* Here's another stream transformer. *)
   Definition mystery_transformer {T A} (step: stepper T A) : stepper T A :=
@@ -421,7 +418,23 @@ Module StreamsAsSteppers.
   (* PROBLEM 10 [5 points, 1 sentence of English]
    * Briefly describe what this transformer does.
    *)
-  (* YOUR ANSWER HERE *)
+  (* It emits an element for the current state, then advances the state *two*
+     steps.  The element for the second step is skipped. *)
+
+  Fixpoint list_skip A (l : list A) : list A :=
+    match l with
+    | [] => []
+    | x' :: l' =>
+      match l' with
+      | [] => [x']
+      | x'' :: l'' => x' :: list_skip A l''
+      end
+  end.
+
+  Compute list_skip nat (1::2::3::4::5::6::[]).
+  Compute run_stepper nats 6 1.
+  Compute list_skip nat (run_stepper nats 6 1).
+  Compute run_stepper (mystery_transformer nats) 3 1.
 
   (* PROBLEM 11 [10 points]
    * State and prove a lemma characterizing mystery_transformer in terms of
@@ -433,9 +446,11 @@ Module StreamsAsSteppers.
   Lemma run_stepper_mystery_transformer :
     forall T A (step : stepper T A) n s,
       run_stepper (mystery_transformer step) n s =
-      []. (* REPLACE `[]` WITH YOUR CHARACTERIZATION OF `mystery_transformer` *)
+      list_skip A (run_stepper step (2 * n) s).
   Proof.
-    (* YOUR CODE HERE *)
+    induct n.
+    - simplify. equality.
+    - simplify.
   Admitted.
 
   (* Above, we defined a function map_stepper by analogy to List.map.
@@ -446,7 +461,8 @@ Module StreamsAsSteppers.
    * Define filter_stepper or explain intuitively why it cannot be defined.
    *)
   Definition filter_stepper {T A} (f : A -> bool) (step : stepper T A) : stepper T A.
-  (* YOUR CODE OR EXPLANATION HERE *)
+  (* filter_stepper is not guaranteed to ever halt (for example, if the predicate always
+     returns False). *)
   Admitted.
 End StreamsAsSteppers.
 
