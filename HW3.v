@@ -24,23 +24,15 @@ Inductive different_trc {A} (R : A -> A -> Prop) : A -> A -> Prop :=
  *
  * Hint: The names of the constructors are useful to think about.
  *)
-(* YOUR DESCRIPTION AND EXPLANATION HERE *)
+(* trc's TrcFront differs from different_trc's DiffTrcBack.  TrcFront states
+   that if x can *step to* y, and if y can *reach* z, then x can reach z.
+   DiffTrcBack flips this -- it states that if x can *reach* y, and y can
+   *reach* z, then x can reach z.
 
-(* The definition of trc is :
-Inductive trc {A} (R : A -> A -> Prop) : A -> A -> Prop :=
-| TrcRefl : forall x, trc R x x
-| TrcFront : forall x y z,
-  R x y
-  -> trc R y z
-  -> trc R x z.
+   These are the same; they just reverse the order of induction.  TrcFront has
+   one induct *forwards* from x, toward z.  DiffTrcBack has one induct *backwards*
+   from z, toward x. *)
 
-trc goes from y to all reachable states from y, and then concludes that those states
-are reachable from x as well.
-different_trc goes from x to all reachable states from x, and then transitions from them.
-And concludes that all states are reachable from x.
-
-Both do transitive reflexive closure.
-*)
 
 (* Now we have an intuitive understanding of why `trc` and `different_trc` are
  * equivalent. Let's prove it!
@@ -57,20 +49,30 @@ Both do transitive reflexive closure.
  *
  * Hint: You might find the lemma `trc_trans` useful with `eapply`.
  *)
-
+Lemma R_x_y_implies_trc_R_x_y :
+  forall A (R : A -> A -> Prop) x y,
+    R x y -> trc R x y.
+Proof.
+  intros.
+  assert (trc R y y).
+  - apply TrcRefl.
+  - eapply TrcFront.
+    + apply H.
+    + apply TrcRefl.
+Qed.
 
 Theorem different_trc_implies_trc :
   forall A (R : A -> A -> Prop) x y,
     different_trc R x y ->
     trc R x y.
 Proof.
-  induct 1; simplify.
-  - econstructor.
-  - eapply trc_trans.
-    + eapply IHdifferent_trc.
-    +
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  induct 1.
+  + apply TrcRefl.
+  + eapply trc_trans.
+    - apply IHdifferent_trc.
+    - apply R_x_y_implies_trc_R_x_y.
+      assumption.
+Qed.
 
 (* PROBLEM 3 [5 points, ~20 tactics]
  * Now prove the second half of the equivalence, that `trc` implies `different_trc`.
@@ -86,13 +88,46 @@ Admitted. (* Change to Qed when done *)
  *
  * Hint: Ask for help if you're stuck!!
  *)
+
+Theorem different_trc_trans :
+  forall {A} (R : A -> A -> Prop) y z,
+    different_trc R y z ->
+      forall x,
+        different_trc R x y ->
+          different_trc R x z.
+Proof.
+  induct 1.
+  - intros. assumption.
+  - intros. eapply DiffTrcBack.
+    + apply IHdifferent_trc.
+      assumption.
+    + assumption.
+Qed.
+
+Lemma R_x_y_implies_different_trc_R_x_y :
+  forall A (R : A -> A -> Prop) x y,
+    R x y -> different_trc R x y.
+Proof.
+  intros.
+  assert (different_trc R y y).
+  - apply DiffTrcRefl.
+  - eapply DiffTrcBack.
+    + apply DiffTrcRefl.
+    + apply H.
+Qed.
+
 Theorem trc_implies_different_trc_implies :
   forall A (R : A -> A -> Prop) x y,
     trc R x y ->
     different_trc R x y.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  induct 1.
+  + apply DiffTrcRefl.
+  + eapply different_trc_trans.
+    - apply IHtrc.
+    - apply R_x_y_implies_different_trc_R_x_y.
+      assumption.
+Qed.
 
 
 (* --- SECTION 2: Inductive predicates for "and" and "or" --- *)
@@ -130,7 +165,9 @@ Qed.
  * Using your mental model for what `invert` does, explain why `invert H` adds two hypotheses,
  * one for `A` and one for `B`.
  *)
-(* YOUR EXPLANATION HERE *)
+(* `invert` determines what facts are implied (in the logical sense of implication)
+   by a hypothesis, and adds them as hypotheses.  In this case, my_and A B is implied
+   by A and B, so `invert` deduces that they must be true as well. *)
 
 (* PROBLEM 5 [2 points, ~4 tactics]
  * Prove the analogous property about `my_and` and its second argument.
@@ -142,8 +179,10 @@ Lemma my_and_project2 :
     my_and A B ->
     B.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  simplify.
+  invert H.
+  assumption.
+Qed.
 
 
 (* PROBLEM 6 [3 points, ~6 tactics]
@@ -158,8 +197,12 @@ Lemma my_and_swap :
     my_and A B ->
     my_and B A.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  intros.
+  invert H.
+  constructor.
+  - assumption.
+  - assumption.
+Qed.
 
 (* Here's a defenition of "or". *)
 Inductive my_or (A B : Prop) : Prop :=
@@ -181,8 +224,19 @@ Lemma my_or_project1 :
     my_or A B ->
     A.
 Proof.
+  simplify.
+  invert H.
+  + assumption.
+  + 
 Abort.
-(* YOUR EXPLANATION HERE *)
+(* my_or has two constructors, unlike my_and.  We know by hypothesis that my_or A B
+   is true, but we don't know which constructor was used to prove it.  `invert`
+   therefore requires that we prove that A follows *regardless* of which constructor
+   was used.  And that cannot be proven for OrSecond.
+
+   At a higher level, that this cannot be proven is obvious.  We are asked to prove
+   that if (A || B) is true, A must be true.  Manifestly, though, (A || B) can be
+   true when A is false and B is true, a counterexample. *)
 
 
 (* PROBLEM 8 [2 points, ~7 tactics]
@@ -195,8 +249,11 @@ Lemma my_or_swap :
     my_or A B ->
     my_or B A.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  intros.
+  invert H.
+  + apply OrSecond. assumption.
+  + apply OrFirst. assumption.
+Qed.
 
 (* PROBLEM 9 [3 points, ~15 tactics]
  * Prove the following relationship between `my_and` and `my_or`.
@@ -208,8 +265,16 @@ Lemma and_or_distr :
     my_and A (my_or B C) ->
     my_or (my_and A B) (my_and A C).
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  intros.
+  invert H.
+  invert H1.
+  - apply OrFirst. constructor.
+    + assumption.
+    + assumption.
+  - apply OrSecond. constructor.
+    + assumption.
+    + assumption.
+Qed.
 
 
 (* --- SECTION 3: Transition systems and inductive invariants --- *)
@@ -250,9 +315,9 @@ Inductive decr_init : decr_state -> Prop :=
 (* PROBLEM 10 [3 points, ~4 LOC]
  * Give an alternate definition of decr_init using Definition instead of Inductive.
  *)
-Definition decr_init_alternative (s : decr_state) : Prop.
-(* insert `:=` on the previous line before the `.`, then add your solution here. *)
-Admitted. (* delete this *)
+Definition decr_init_alternative (s : decr_state) : Prop :=
+  exists nx,
+    s = {| var_x := nx; var_y := 42; var_done := false |}.
 
 (* PROBLEM 11 [5 points, ~10 tactics]
  * Prove your alternative definition equivalent to the original.
@@ -261,8 +326,17 @@ Lemma decr_init_alternative_ok :
   forall s,
     decr_init_alternative s <-> decr_init s.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  intros.
+  unfold decr_init_alternative.
+  constructor.
+  + propositional.
+    invert H.
+    constructor.
+  + propositional.
+    invert H.
+    eexists.
+    equality.
+Qed.
 
 (* Ok, back to encoding that program as a transition system. We're ready for the step relation.
  * There are three steps:
@@ -304,11 +378,43 @@ Definition decr_safe (s : decr_state) : Prop :=
  * Hint: As always, finding the right strengthened invariant is the hard part. It took
  * me a couple tries to get it right. Ask for help if you're stuck!
  *)
+Definition decr_safe_strong (s : decr_state) : Prop :=
+  match s with
+  | {| var_x := nx; var_y := 0; var_done := _|} => nx = 0
+  | {| var_x := nx; var_y := S _; var_done := true|} => False
+  | _ => True
+  end.
+
+Theorem decr_ok_strong :
+  invariantFor decr_sys decr_safe_strong.
+Proof.
+  apply invariant_induction.
+  + intros. invert H. unfold decr_safe_strong. trivial.
+  + intros. invert H0.
+    - unfold decr_safe_strong. cases n_y.
+      * invert H.
+      * trivial.
+    - unfold decr_safe_strong. cases n_y.
+      * equality.
+      * trivial.
+    - unfold decr_safe_strong. invert H. trivial.
+Qed.
+
 Theorem decr_ok :
   invariantFor decr_sys decr_safe.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  apply invariant_weaken with (invariant1 := decr_safe_strong).
+  + apply decr_ok_strong.
+  + intros.
+    unfold decr_safe.
+    unfold decr_safe_strong in H.
+    cases s.
+    cases var_done0.
+    - cases var_y0.
+      * assumption.
+      * equality.
+    - trivial.
+Qed.
 
 
 (* --- SECTION 4: Abstraction and model checking --- *)
@@ -379,8 +485,11 @@ Lemma decr_R_var_eqb :
   forall n,
     decr_R_var n (Nat.eqb n 0).
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  intros.
+  cases n.
+  - simplify. constructor.
+  - simplify. constructor.
+Qed.
 
 
 (* A state of the original system is related to an abstract state if x and y are related
@@ -400,7 +509,16 @@ Inductive decr_R : decr_state -> decr_bool_state -> Prop :=
 Lemma decr_sim :
   simulates decr_R decr_sys decr_bool_sys.
 Proof.
-  (* YOUR CODE HERE *)
+  constructor.
+  - intros.
+    simplify.
+    eexists.
+    propositional.
+    + admit.
+    + constructor.
+  - intros.
+    simplify.
+    eexists.
 Admitted. (* Change to Qed when done *)
 
 (* Ok, the tedious part is over. Now we can prove the original system safe
@@ -482,8 +600,12 @@ Fixpoint interp (e : arith) (v : valuation) : nat :=
  *)
 Inductive arith_eval : valuation -> arith -> nat -> Prop := (* this semantics relates a valuation and an expression to its value (a nat) *)
 | ArithEvalConst : forall v n, arith_eval v (Const n) n  (* think of this as: "in any valuation, Const n evaluates to n" *)
-(* REST OF YOUR DEFINITION HERE *)
+| ArithEvalVar : forall v x, arith_eval v (Var x) (interp (Var x) v)
+| ArithEvalPlus : forall v e1 e2, arith_eval v (Plus e1 e2) (interp e1 v + interp e2 v)
+| ArithEvalMinus : forall v e1 e2, arith_eval v (Minus e1 e2) (interp e1 v - interp e2 v)
+| ArithEvalTimes : forall v e1 e2, arith_eval v (Times e1 e2) (interp e1 v * interp e2 v)
 .
+(* TODO: Is this right? *)
 
 (* Now we have two different semantics for arithmetic expressions: `interp` and `arith_eval`.
  * Let's prove that these two semantics agree.
@@ -499,8 +621,8 @@ Lemma interp_eval :
     interp e v = n ->
     arith_eval v e n.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  induct e; intros; simplify; invert H; constructor.
+Qed.
 
 
 (* PROBLEM 18 [3 points, ~10 tactics, or many fewer using semicolons]
@@ -513,8 +635,8 @@ Lemma eval_interp :
     arith_eval v e n ->
     interp e v = n.
 Proof.
-  (* YOUR CODE HERE *)
-Admitted. (* Change to Qed when done *)
+  induct e; intros; simplify; invert H; equality.
+Qed.
 
 
 (* We can also give a small-step operational semantics to arithmetic expressions. *)
@@ -540,9 +662,30 @@ Inductive arith_step : valuation -> arith -> arith -> Prop := (* this semantics 
 
 | ArithStepPlus : forall v n1 n2,
     arith_step v (Plus (Const n1) (Const n2)) (Const (n1 + n2))
-
-(* YOUR DEFINITION HERE *)
+| ArithStepPlusLeft : forall v e1 e2 e1',
+    arith_step v e1 e1' -> arith_step v (Plus e1 e2) (Plus e1' e2)
+| ArithStepPlusRight : forall v e1 e2 e2',
+    arith_step v e2 e2' -> arith_step v (Plus e1 e2) (Plus e1 e2')
+| ArithStepMinus : forall v n1 n2,
+    arith_step v (Minus (Const n1) (Const n2)) (Const (n1 + n2))
+| ArithStepMinusLeft : forall v e1 e2 e1',
+    arith_step v e1 e1' -> arith_step v (Minus e1 e2) (Minus e1' e2)
+| ArithStepMinusRight : forall v e1 e2 e2',
+    arith_step v e2 e2' -> arith_step v (Minus e1 e2) (Minus e1 e2')
+| ArithStepTimes : forall v n1 n2,
+    arith_step v (Times (Const n1) (Const n2)) (Const (n1 + n2))
+| ArithStepTimesLeft : forall v e1 e2 e1',
+    arith_step v e1 e1' -> arith_step v (Times e1 e2) (Times e1' e2)
+| ArithStepTimesRight : forall v e1 e2 e2',
+    arith_step v e2 e2' -> arith_step v (Times e1 e2) (Times e1 e2')
+(*| ArithStepVar : forall v x,
+    match v $? x with
+    | None => arith_step v (Var x) (Const 0)
+    | Some n => arith_step v (Var x) (Const n)
+    end *)
 .
+(* TODO: ArithStepVar *)
+(* TODO: Is the rest right? *)
 
 (* Let's prove the small step semantics equivalent to the big step. *)
 
