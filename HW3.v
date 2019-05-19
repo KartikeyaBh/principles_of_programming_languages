@@ -533,67 +533,17 @@ Proof.
     cases st1.
     cases var_x0; cases var_y0; cases var_done0.
     + invert H0.
-    + eexists. propositional.
-      * invert H0. constructor.
-        -- constructor.
-        -- constructor.
-      * invert H0. invert H. invert H4. invert H5. constructor.
+    + eexists.
+      propositional; invert H0; invert H; invert H4; invert H5; constructor; constructor.
     + invert H0.
-    + cases var_y0; eexists.
-      * propositional.
-        -- invert H0. constructor.
-          ++ invert H. invert H4. invert H5. constructor.
-          ++ invert H. invert H4. invert H5. constructor.
-        -- invert H0. invert H. invert H4. invert H5. constructor.
-      * propositional.
-        -- invert H0. constructor.
-          ++ constructor.
-          ++ invert H. invert H4. invert H5. constructor.
-        -- invert H0. invert H. invert H4. invert H5. constructor.
+    + cases var_y0; eexists;
+      propositional; invert H0; invert H; invert H4; invert H5; constructor; constructor.
     + invert H0.
-    + cases var_x0; simplify; propositional; invert H0; eexists.
-      * propositional.
-        -- invert H. invert H4. invert H5. constructor.
-          ++ constructor.
-          ++ constructor.
-        -- invert H. invert H4. invert H5. constructor.
-      * propositional.
-        -- invert H. invert H4. invert H5. constructor.
-          ++ constructor.
-          ++ constructor.
-        -- invert H. invert H4. invert H5. constructor.
-      * propositional.
-        -- invert H. invert H4. invert H5. constructor.
-          ++ constructor.
-          ++ constructor.
-        -- invert H. invert H4. invert H5. constructor.
-      * propositional.
-        -- invert H. invert H4. invert H5. constructor.
-          ++ constructor.
-          ++ constructor.
-        -- invert H. invert H4. invert H5. constructor.
+    + cases var_x0; simplify; propositional; invert H0; eexists;
+      propositional; invert H; invert H4; invert H5; constructor; constructor.
     + invert H0.
-    + cases var_x0; cases var_y0.
-      * eexists. propositional.
-        -- invert H. invert H5. invert H6. invert H0. constructor.
-          ++ constructor.
-          ++ constructor.
-        -- invert H. invert H5. invert H6. invert H0. constructor.
-      * eexists. propositional.
-        -- invert H. invert H5. invert H6. invert H0. constructor.
-          ++ constructor.
-          ++ constructor.
-        -- invert H. invert H5. invert H6. invert H0. constructor.
-      * eexists. propositional.
-        -- invert H. invert H5. invert H6. invert H0. constructor.
-          ++ constructor.
-          ++ constructor.
-        -- invert H. invert H5. invert H6. invert H0. constructor.
-      * eexists. propositional.
-        -- invert H. invert H5. invert H6. invert H0. constructor.
-          ++ constructor.
-          ++ constructor.
-        -- invert H. invert H5. invert H6. invert H0. constructor.
+    + cases var_x0; cases var_y0; eexists;
+      propositional; invert H; invert H5; invert H6; invert H0; constructor; constructor.
 Qed.
 
 (* Ok, the tedious part is over. Now we can prove the original system safe
@@ -624,11 +574,14 @@ Proof.
   eapply invariant_weaken with (invariant1 := invariantViaSimulation decr_R _).
   - apply invariant_simulates with (sys2 := decr_bool_sys).
     + apply decr_sim.
-    + (* uncomment this tactic to run the model checker! *) (* model_check_infer. *) 
-      (* delete this line *) admit.
-  - (* Now complete the proof by analyzing all states found by the model checker. *)
-    (* REST OF YOUR PROOF HERE. *)
-Admitted. (* Change to Qed when done *)
+    + model_check_infer.
+  - intros.
+    invert H. invert H1.
+    + invert H0. constructor.
+    + invert H0.
+      invert H1; invert H2; invert H; invert H0;
+      try cases done; try constructor; invert H; invert H0.
+Qed.
 
 
 (* --- SECTION 5: Operational semantics for expressions --- *)
