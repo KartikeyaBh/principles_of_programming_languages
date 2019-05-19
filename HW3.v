@@ -511,15 +511,90 @@ Lemma decr_sim :
 Proof.
   constructor.
   - intros.
-    simplify.
-    eexists.
-    propositional.
-    + admit.
-    + constructor.
-  - intros.
-    simplify.
-    eexists.
-Admitted. (* Change to Qed when done *)
+    cases st1.
+    cases var_x0.
+    + eexists.
+      constructor.
+      * constructor.
+        -- constructor.
+        -- invert H. constructor.
+      * assert (var_done0 = false).
+        -- invert H. equality.
+        -- rewrite H0. constructor.
+    + eexists.
+      constructor.
+      * constructor.
+        -- constructor.
+        -- invert H. constructor.
+      * assert (var_done0 = false).
+        -- invert H. equality.
+        -- rewrite H0. constructor.
+- intros.
+    cases st1.
+    cases var_x0; cases var_y0; cases var_done0.
+    + invert H0.
+    + eexists. propositional.
+      * invert H0. constructor.
+        -- constructor.
+        -- constructor.
+      * invert H0. invert H. invert H4. invert H5. constructor.
+    + invert H0.
+    + cases var_y0; eexists.
+      * propositional.
+        -- invert H0. constructor.
+          ++ invert H. invert H4. invert H5. constructor.
+          ++ invert H. invert H4. invert H5. constructor.
+        -- invert H0. invert H. invert H4. invert H5. constructor.
+      * propositional.
+        -- invert H0. constructor.
+          ++ constructor.
+          ++ invert H. invert H4. invert H5. constructor.
+        -- invert H0. invert H. invert H4. invert H5. constructor.
+    + invert H0.
+    + cases var_x0; simplify; propositional; invert H0; eexists.
+      * propositional.
+        -- invert H. invert H4. invert H5. constructor.
+          ++ constructor.
+          ++ constructor.
+        -- invert H. invert H4. invert H5. constructor.
+      * propositional.
+        -- invert H. invert H4. invert H5. constructor.
+          ++ constructor.
+          ++ constructor.
+        -- invert H. invert H4. invert H5. constructor.
+      * propositional.
+        -- invert H. invert H4. invert H5. constructor.
+          ++ constructor.
+          ++ constructor.
+        -- invert H. invert H4. invert H5. constructor.
+      * propositional.
+        -- invert H. invert H4. invert H5. constructor.
+          ++ constructor.
+          ++ constructor.
+        -- invert H. invert H4. invert H5. constructor.
+    + invert H0.
+    + cases var_x0; cases var_y0.
+      * eexists. propositional.
+        -- invert H. invert H5. invert H6. invert H0. constructor.
+          ++ constructor.
+          ++ constructor.
+        -- invert H. invert H5. invert H6. invert H0. constructor.
+      * eexists. propositional.
+        -- invert H. invert H5. invert H6. invert H0. constructor.
+          ++ constructor.
+          ++ constructor.
+        -- invert H. invert H5. invert H6. invert H0. constructor.
+      * eexists. propositional.
+        -- invert H. invert H5. invert H6. invert H0. constructor.
+          ++ constructor.
+          ++ constructor.
+        -- invert H. invert H5. invert H6. invert H0. constructor.
+      * eexists. propositional.
+        -- invert H. invert H5. invert H6. invert H0. constructor.
+          ++ constructor.
+          ++ constructor.
+        -- invert H. invert H5. invert H6. invert H0. constructor.
+Qed.
 
 (* Ok, the tedious part is over. Now we can prove the original system safe
  * using model checking on the abstract system. But first, we need to express
@@ -678,14 +753,10 @@ Inductive arith_step : valuation -> arith -> arith -> Prop := (* this semantics 
     arith_step v e1 e1' -> arith_step v (Times e1 e2) (Times e1' e2)
 | ArithStepTimesRight : forall v e1 e2 e2',
     arith_step v e2 e2' -> arith_step v (Times e1 e2) (Times e1 e2')
-(*| ArithStepVar : forall v x,
-    match v $? x with
-    | None => arith_step v (Var x) (Const 0)
-    | Some n => arith_step v (Var x) (Const n)
-    end *)
+| ArithStepVar : forall v x,
+    arith_step v (Var x) (Const (interp (Var x) v))
 .
-(* TODO: ArithStepVar *)
-(* TODO: Is the rest right? *)
+(* TODO: Is this right? *)
 
 (* Let's prove the small step semantics equivalent to the big step. *)
 
@@ -698,7 +769,11 @@ Lemma arith_eval_step :
     arith_eval v e n ->
     (arith_step v)^* e (Const n).
 Proof.
-  (* YOUR CODE HERE *)
+  induct 1.
+  - constructor.
+  - econstructor.
+    + admit.
+    + 
 Admitted. (* Change to Qed when done *)
 
 
