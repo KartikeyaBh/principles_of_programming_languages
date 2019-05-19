@@ -725,8 +725,17 @@ Proof.
   induct 1.
   - constructor.
   - econstructor.
+    + econstructor.
+    + econstructor.
+  - econstructor.
     + admit.
-    + 
+    + econstructor.
+  - econstructor.
+    + admit.
+    + econstructor.
+  - econstructor.
+    + admit.
+    + econstructor.
 Admitted. (* Change to Qed when done *)
 
 
@@ -739,5 +748,10 @@ Lemma arith_step_eval :
     trc (arith_step v) e (Const n) ->
     arith_eval v e n.
 Proof.
-  (* YOUR CODE HERE *)
+  induct 1.
+  - econstructor.
+  - invert H. invert H0.
+      + econstructor.
+      + invert H. 
+      + invert H0. invert H1. invert H. invert H2. econstructor. invert H.
 Admitted. (* Change to Qed when done *)
