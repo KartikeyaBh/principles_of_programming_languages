@@ -629,9 +629,15 @@ Fixpoint interp (e : arith) (v : valuation) : nat :=
 Inductive arith_eval : valuation -> arith -> nat -> Prop := (* this semantics relates a valuation and an expression to its value (a nat) *)
 | ArithEvalConst : forall v n, arith_eval v (Const n) n  (* think of this as: "in any valuation, Const n evaluates to n" *)
 | ArithEvalVar : forall v x, arith_eval v (Var x) (interp (Var x) v)
-| ArithEvalPlus : forall v e1 e2, arith_eval v (Plus e1 e2) (interp e1 v + interp e2 v)
-| ArithEvalMinus : forall v e1 e2, arith_eval v (Minus e1 e2) (interp e1 v - interp e2 v)
-| ArithEvalTimes : forall v e1 e2, arith_eval v (Times e1 e2) (interp e1 v * interp e2 v)
+| ArithEvalPlus :
+  forall v e1 e2 n1 n2,
+    arith_eval v e1 n1 -> arith_eval v e2 n2 -> arith_eval v (Plus e1 e2) (n1 + n2)
+| ArithEvalMinus :
+  forall v e1 e2 n1 n2,
+    arith_eval v e1 n1 -> arith_eval v e2 n2 -> arith_eval v (Minus e1 e2) (n1 - n2)
+| ArithEvalTimes :
+  forall v e1 e2 n1 n2,
+    arith_eval v e1 n1 -> arith_eval v e2 n2 -> arith_eval v (Times e1 e2) (n1 * n2)
 .
 (* TODO: Is this right? *)
 
@@ -649,7 +655,24 @@ Lemma interp_eval :
     interp e v = n ->
     arith_eval v e n.
 Proof.
-  induct e; intros; simplify; invert H; constructor.
+  induct e; intros; simplify; invert H.
+  + constructor.
+  + cases (v $? x).
+    - assert (n = interp (Var x) v).
+      * simplify. rewrite Heq. equality.
+      * rewrite H. constructor.
+    - assert (0 = interp (Var x) v).
+      * simplify. rewrite Heq. equality.
+      * rewrite H. constructor.
+  + econstructor.
+    - apply IHe1. equality.
+    - apply IHe2. equality.
+  + econstructor.
+    - apply IHe1. equality.
+    - apply IHe2. equality.
+  + econstructor.
+    - apply IHe1. equality.
+    - apply IHe2. equality.
 Qed.
 
 
@@ -663,7 +686,18 @@ Lemma eval_interp :
     arith_eval v e n ->
     interp e v = n.
 Proof.
-  induct e; intros; simplify; invert H; equality.
+  induct e; intros; simplify; invert H.
+  + equality.
+  + simplify. equality.
+  + f_equal.
+    - apply IHe1 in H3. assumption.
+    - apply IHe2 in H5. assumption.
+  + f_equal.
+    - apply IHe1 in H3. assumption.
+    - apply IHe2 in H5. assumption.
+  + f_equal.
+    - apply IHe1 in H3. assumption.
+    - apply IHe2 in H5. assumption.
 Qed.
 
 
@@ -692,20 +726,20 @@ Inductive arith_step : valuation -> arith -> arith -> Prop := (* this semantics 
     arith_step v (Plus (Const n1) (Const n2)) (Const (n1 + n2))
 | ArithStepPlusLeft : forall v e1 e2 e1',
     arith_step v e1 e1' -> arith_step v (Plus e1 e2) (Plus e1' e2)
-| ArithStepPlusRight : forall v e1 e2 e2',
-    arith_step v e2 e2' -> arith_step v (Plus e1 e2) (Plus e1 e2')
+| ArithStepPlusRight : forall v n1 e2 e2',
+    arith_step v e2 e2' -> arith_step v (Plus (Const n1) e2) (Plus (Const n1) e2')
 | ArithStepMinus : forall v n1 n2,
-    arith_step v (Minus (Const n1) (Const n2)) (Const (n1 + n2))
+    arith_step v (Minus (Const n1) (Const n2)) (Const (n1 - n2))
 | ArithStepMinusLeft : forall v e1 e2 e1',
     arith_step v e1 e1' -> arith_step v (Minus e1 e2) (Minus e1' e2)
-| ArithStepMinusRight : forall v e1 e2 e2',
-    arith_step v e2 e2' -> arith_step v (Minus e1 e2) (Minus e1 e2')
+| ArithStepMinusRight : forall v n1 e2 e2',
+    arith_step v e2 e2' -> arith_step v (Minus (Const n1) e2) (Minus (Const n1) e2')
 | ArithStepTimes : forall v n1 n2,
-    arith_step v (Times (Const n1) (Const n2)) (Const (n1 + n2))
+    arith_step v (Times (Const n1) (Const n2)) (Const (n1 * n2))
 | ArithStepTimesLeft : forall v e1 e2 e1',
     arith_step v e1 e1' -> arith_step v (Times e1 e2) (Times e1' e2)
-| ArithStepTimesRight : forall v e1 e2 e2',
-    arith_step v e2 e2' -> arith_step v (Times e1 e2) (Times e1 e2')
+| ArithStepTimesRight : forall v n1 e2 e2',
+    arith_step v e2 e2' -> arith_step v (Times (Const n1) e2) (Times (Const n1) e2')
 | ArithStepVar : forall v x,
     arith_step v (Var x) (Const (interp (Var x) v))
 .
