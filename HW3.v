@@ -1,5 +1,5 @@
 (* -------------------------------------- Homework 3 --------------------------------------
- *
+ * Partners: David Klock, Kartikeya Bhardwaj
  *)
 
 Require Import Frap.
