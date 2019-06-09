@@ -1184,7 +1184,62 @@ Module StlcWithFix.
         eauto.
         eauto.
         assumption.
-    (* YOUR CODE HERE *)
+    - propositional.
+      + admit.
+      + right.
+        invert H0.
+        invert H1.
+        eauto.
+    - propositional.
+      + admit.
+      + admit.
+      + admit.
+      + admit.
+      + admit.
+      + admit.
+      + admit.
+      + admit.
+    - propositional.
+      + right.
+        match goal with
+        | [ H1 : value e1, H2 : hasty $0 e1 _ |- _ ] => invert H1; invert H2
+        end.
+        match goal with
+        | [ H1 : value e2, H2 : hasty $0 e2 _ |- _ ] => invert H1; invert H2
+        end.
+        exists (Const (n - n0)).
+        eapply StepRule with (C := Hole).
+        eauto.
+        eauto.
+        constructor.
+      + match goal with
+        | [ H : exists x, _ |- _ ] => invert H
+        end.
+        match goal with
+        | [ H : step _ _ |- _ ] => invert H
+        end.
+        right.
+        eauto.
+      + match goal with
+        | [ H : exists x, _ |- _ ] => invert H
+        end.
+        match goal with
+        | [ H : step _ _ |- _ ] => invert H
+        end.
+        right.
+        eauto.
+      + match goal with
+        | [ H : exists x, step e1 _ |- _ ] => invert H
+        end.
+        match goal with
+        | [ H : step _ _ |- _ ] => invert H
+        end.
+        right.
+        exists (Minus x e2).
+        eapply StepRule with (C := Minus1 C e2).
+        eauto.
+        eauto.
+        assumption.
   Admitted. (* Change to Qed when done *)
 
   Lemma weakening_override : forall (G G' : fmap var type) x t,
@@ -1231,8 +1286,22 @@ Module StlcWithFix.
       assumption.
       apply IHhasty2.
       assumption.
-    (* YOUR CODE HERE *)
-  Admitted. (* Change to Qed when done *)
+    - constructor.
+      apply IHhasty.
+      assumption.
+    - constructor.
+      apply IHhasty1.
+      assumption.
+      apply IHhasty2.
+      assumption.
+      apply IHhasty3.
+      assumption.
+    - constructor.
+      apply IHhasty1.
+      assumption.
+      apply IHhasty2.
+      assumption.
+  Qed.
 
   (* PROBLEM 24 [4 points, ~4 tactics]
    * Extend the proof of `substitution` to handle the new language constructs.
@@ -1280,8 +1349,16 @@ Module StlcWithFix.
     - econstructor.
       eapply IHhasty1; equality.
       eapply IHhasty2; equality.
-    (* YOUR CODE HERE *)
-  Admitted. (* Change to Qed when done *)
+    - econstructor.
+      eapply IHhasty; equality.
+    - econstructor.
+      + eapply IHhasty1; equality.
+      + eapply IHhasty2; equality.
+      + eapply IHhasty3; equality.
+    - constructor.
+      + eapply IHhasty1; equality.
+      + eapply IHhasty2; equality.
+  Qed.
 
   (* PROBLEM 25 [4 points, ~15 tactics]
    * Extend the proof of `preservation0` to handle the new language constructs.
@@ -1305,8 +1382,20 @@ Module StlcWithFix.
       constructor.
     - invert H.
       constructor.
-    (* YOUR CODE HERE *)
-  Admitted. (* Change to Qed when done *)
+    - invert H.
+      invert H2.
+      eapply substitution.
+      + eassumption.
+      + econstructor.
+        econstructor.
+        assumption.
+    - invert H.
+      assumption.
+    - invert H.
+      assumption.
+    - invert H.
+      constructor.
+  Qed.
 
   (* PROBLEM 26 [4 points, ~15 tactics]
    * Extend the proof of `generalize_plug` to handle the new language constructs.
@@ -1372,8 +1461,39 @@ Module StlcWithFix.
         * eassumption.
         * assumption.
         * eassumption.
-    (* YOUR CODE HERE *)
-  Admitted. (* Change to Qed when done *)
+    - invert H0.
+      invert H2.
+      econstructor.
+      + eapply IHplug.
+        * eassumption.
+        * assumption.
+        * eassumption.
+    - invert H0.
+      invert H2.
+      econstructor.
+      + eapply IHplug.
+        * eassumption.
+        * assumption.
+        * eassumption.
+      + eassumption.
+      + eassumption.
+    - invert H0.
+      invert H2.
+      econstructor.
+      + eapply IHplug.
+        * eassumption.
+        * assumption.
+        * eassumption.
+      + eassumption.
+    - invert H1.
+      invert H3.
+      econstructor.
+      + eassumption.
+      + eapply IHplug.
+        * eassumption.
+        * assumption.
+        * eassumption.
+  Qed.
 
   (* This proof should go through without modifications. *)
   Lemma preservation : forall e1 e2,
