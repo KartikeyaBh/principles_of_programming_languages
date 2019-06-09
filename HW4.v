@@ -770,7 +770,8 @@ Module StlcWithFix.
       | Fix e2' => Fix (subst e1 x e2')
 
       (* YOUR CODE HERE *)
-      | _ => e2 (* delete this line *)
+      | IfZero e2' e2'' e2''' => IfZero (subst e1 x e2') (subst e1 x e2'') (subst e1 x e2''')
+      | Minus e2' e2'' => Minus (subst e1 x e2') (subst e1 x e2'')
     end.
 
   Inductive context : Set :=
@@ -827,7 +828,16 @@ Module StlcWithFix.
    *
    * Hint: You'll know you got this right if you can prove the Lemma `generalize_plug` below.
    *)
-  (* YOUR CODE HERE *). 
+  | PlugIfZero : forall C e e' e2 e3,
+    plug C e e'
+    -> plug (CIfZero C e2 e3) e (IfZero e' e2 e3)
+  | PlugMinus1 : forall e e' C e2,
+    plug C e e'
+    -> plug (Minus1 C e2) e (Minus e' e2)
+  | PlugMinus2 : forall e e' v1 C,
+    value v1
+    -> plug C e e'
+    -> plug (Minus2 v1 C) e (Minus v1 e').
 
   Inductive step0 : exp -> exp -> Prop :=
   | Beta : forall x e v,
@@ -853,7 +863,8 @@ Module StlcWithFix.
    *
    * Hint: It's like the rule for Plus, but it subtracts instead of adds.
    *)
-  (* YOUR CODE HERE *). 
+  | Subtract : forall n1 n2,
+    step0 (Minus (Const n1) (Const n2)) (Const (n1 - n2)).
 
   Inductive step : exp -> exp -> Prop :=
   | StepRule : forall C e1 e2 e1' e2',
@@ -908,7 +919,9 @@ Module StlcWithFix.
    *
    * In other words, if e is a function from t to t, then fix e has type t.
    *)
-  (* YOUR CODE HERE *) 
+  | HtFix : forall G e t,
+    hasty G e (Fun t t)
+    -> hasty G (Fix e) t
 
 
   (* PROBLEM 17 [4 points, ~10 LOC]
@@ -924,7 +937,15 @@ Module StlcWithFix.
    *
    * Hint: Minus is similar to Plus.
    *)
-  (* YOUR CODE HERE *).  
+  | HtIfZero : forall G e1 e2 e3 t,
+    hasty G e1 Nat
+    -> hasty G e2 t
+    -> hasty G e3 t
+    -> hasty G (IfZero e1 e2 e3) t
+  | HtMinus : forall G e1 e2,
+    hasty G e1 Nat
+    -> hasty G e2 Nat
+    -> hasty G (Minus e1 e2) Nat.
 
 
   Hint Constructors value plug step0 step hasty.
@@ -970,26 +991,34 @@ Module StlcWithFix.
   Example factorial_ht :
     hasty $0 factorial_exp (Nat --> Nat).
   Proof.
-    (* YOUR CODE HERE *)
-  Admitted. (* Change to Qed when done *)
+    repeat (econstructor; simplify).
+  Qed.
 
   (* Here's a proof that the above factorial expression applied to 5 evaluates to 120. *)
   Example factorial_of_5 :
     trc step (factorial_exp @ 5) 120.
   Proof.
     (* Uncomment this proof once you've added constructors to step0 for Minus. *)
-    (*
     unfold factorial_exp.
     repeat (econstructor; [now eauto 20|simplify]).
     apply TrcRefl.
-    *)
-    Admitted. (* Change to Qed *)
+  Qed.
 
   (* PROBLEM 19 [4 points, ~2 LOC]
    * Implement an expression `fib` that returns the nth Fibonacci number.
    *)
   Definition fib_exp : exp :=
-    0. (* Replace 0 with your actual code. *) 
+    Fix
+      (\"rec",
+        (\"n",
+          IfZero
+            "n"
+            1
+            (IfZero
+              ("n" ^-^ 1)
+              1
+              (("rec" @ ("n" ^-^ 1)) ^+^ ("rec" @ ("n" ^-^ 2)))
+        ))).
 
   (* PROBLEM 20 [4 points, ~3 tactics]
    * Prove that your definition of fib is well typed.
@@ -999,8 +1028,8 @@ Module StlcWithFix.
   Example fib_ht :
     hasty $0 fib_exp (Nat --> Nat).
   Proof.
-    (* YOUR CODE HERE *)
-  Admitted. (* Change to Qed when done *)
+    repeat (econstructor; simplify).
+  Qed.
 
   (* PROBLEM 21 [4 points, ~5 tactics]
    * Prove that your definition of fib correctly computes that the 5th fibonacci
@@ -1011,8 +1040,10 @@ Module StlcWithFix.
   Example fib_of_4 :
     trc step (fib_exp @ 4) 5.
   Proof.
-    (* YOUR CODE HERE *)
-  Admitted. (* Change to Qed when done *)
+    unfold fib_exp.
+    repeat (econstructor; [now eauto 20|simplify]).
+    apply TrcRefl.
+  Qed.
 
   Definition unstuck e := value e
     \/ (exists e' : exp, step e e').
